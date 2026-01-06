@@ -1,0 +1,57 @@
+
+server:
+  port: ${PORT:8762}
+
+## Eureka configuration
+eureka:
+  instance:
+    preferIpAddress: true
+    hostname: ${HOSTNAME:localhost}
+
+  client:
+    registerWithEureka: true
+    fetchRegistry: true
+    serviceUrl:
+      defaultZone: ${EUREKA_URL:http://localhost:8761/eureka}
+
+## Enable service discovery (with Eureka)
+## lower-case-service-id is mandatory, otherwise is retrieved in upper case
+
+spring:
+  application:
+    name: gateway
+  cloud:
+    gateway:
+      server:
+        webflux:
+          discovery:
+            locator:
+              enabled: true
+              lower-case-service-id: true
+          default-filters:
+            - DedupeResponseHeader=Access-Control-Allow-Credentials Access-Control-Allow-Origin
+          globalcors: ## CORS Configuration
+            cors-configurations:
+              '[/**]':
+                allowed-origins: ${ALLOWED_ORIGINS:*}
+                allowed-headers: "*"
+                allowed-methods:
+                  - GET
+                  - POST
+                  - PUT
+                  - DELETE
+                  - PATCH
+
+## We enable the Actuator API to be able to access <<host>>/actuator/gateway/routes
+## We expose the routings that have been automatically detected (all)
+## Depending on the ROUTE_TABLES_ENABLED environment variable (true by default)
+
+management:
+  endpoint:
+    gateway:
+      access: ${ROUTE_TABLES_ENABLED:read_only}
+  endpoints:
+      web:
+        exposure:
+          include:
+            - '*'
